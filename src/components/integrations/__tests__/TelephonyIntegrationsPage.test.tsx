@@ -8,7 +8,7 @@ afterEach(() => {
 });
 
 describe("TelephonyIntegrationsPage", () => {
-  it("renders provider cards with explicit number source badges and disabled Add SIP Trunk button", () => {
+  it("renders provider cards with explicit number source badges and working Add SIP Trunk button", () => {
     render(<TelephonyIntegrationsPage />);
 
     const voiceLinkCard = screen.getByTestId("provider-card-prov-voicelink-1");
@@ -26,7 +26,16 @@ describe("TelephonyIntegrationsPage", () => {
     expect(within(plivoCard).getByText("Client-added")).toBeInTheDocument();
 
     const addSipBtn = screen.getByRole("button", { name: /add sip trunk/i });
-    expect(addSipBtn).toBeDisabled();
+    expect(addSipBtn).toBeEnabled();
+
+    // Clicking Add SIP Trunk opens the configuration form
+    fireEvent.click(addSipBtn);
+    expect(screen.getByText("Tutorial Video")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
+
+    // Cancel returns to provider cards view
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByRole("button", { name: /add sip trunk/i })).toBeInTheDocument();
 
     const requestBtn = screen.getByRole("button", { name: /request number/i });
     expect(requestBtn).toBeEnabled();
@@ -150,6 +159,34 @@ describe("TelephonyIntegrationsPage", () => {
     expect(
       screen.getByText("Demo request submitted. No request was sent to the team.")
     ).toBeInTheDocument();
+  });
+
+  it("allows configuring and adding a new SIP trunk", () => {
+    render(<TelephonyIntegrationsPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /add sip trunk/i }));
+
+    // Select Zadarma provider
+    fireEvent.click(screen.getByRole("button", { name: "Zadarma" }));
+    expect(screen.getByText(/Video Player Placeholder/i)).toBeInTheDocument();
+
+    // Fill phone number
+    const phoneInput = screen.getByPlaceholderText("415 555 0100");
+    fireEvent.change(phoneInput, { target: { value: "4155550999" } });
+
+    // Fill Zadarma credentials
+    const apiKeyInput = screen.getByPlaceholderText("admin@mantracare.com");
+    fireEvent.change(apiKeyInput, { target: { value: "zadarma-key-123" } });
+
+    // Submit form
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+    // Returns to provider view with new provider card and routing entry
+    expect(
+      screen.getByText("SIP Trunk successfully connected for Zadarma.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Zadarma")).toBeInTheDocument();
+    expect(screen.getAllByText("+14155550999")).toHaveLength(2);
   });
 });
 

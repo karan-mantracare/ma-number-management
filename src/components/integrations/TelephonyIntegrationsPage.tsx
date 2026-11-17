@@ -21,7 +21,10 @@ import {
   ROUTING_NUMBERS,
   TELEPHONY_PROVIDERS,
   type RoutingDirection,
+  type RoutingNumberItem,
+  type TelephonyProviderItem,
 } from "@/data/telephony";
+import { AddSipTrunkForm, type NewSipTrunkData } from "./AddSipTrunkForm";
 import { AppShell } from "./AppShell";
 import { DefaultBadge, DirectionBadge, SourceBadge } from "./Badges";
 import { CountryFlag } from "./CountryFlag";
@@ -34,13 +37,19 @@ export function TelephonyIntegrationsPage() {
   const [routingTab, setRoutingTab] = useState<RoutingDirection>("outbound");
   const [searchQuery, setSearchQuery] = useState("");
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [isAddingSipTrunk, setIsAddingSipTrunk] = useState(false);
   const [submissionNotice, setSubmissionNotice] = useState<string | null>(null);
+
+  const [providers, setProviders] =
+    useState<TelephonyProviderItem[]>(TELEPHONY_PROVIDERS);
+  const [routingNumbers, setRoutingNumbers] =
+    useState<RoutingNumberItem[]>(ROUTING_NUMBERS);
 
   const filteredRoutingNumbers = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const digitsQuery = normalizedQuery.replace(/\D/g, "");
 
-    return ROUTING_NUMBERS.filter((item) => {
+    return routingNumbers.filter((item) => {
       if (item.direction !== routingTab) return false;
       if (!normalizedQuery) return true;
 
@@ -52,11 +61,49 @@ export function TelephonyIntegrationsPage() {
         (digitsQuery.length > 0 && phoneDigits.includes(digitsQuery))
       );
     });
-  }, [routingTab, searchQuery]);
+  }, [routingNumbers, routingTab, searchQuery]);
 
   const handleRequestSuccess = (_values: RequestNumberFormValues) => {
     setIsRequestModalOpen(false);
     setSubmissionNotice("Demo request submitted. No request was sent to the team.");
+  };
+
+  const handleCreateSipTrunk = (data: NewSipTrunkData) => {
+    const newId = `prov-${Date.now()}`;
+    const newProvider: TelephonyProviderItem = {
+      id: newId,
+      name: data.name,
+      label: data.label,
+      direction: data.direction,
+      countryIso: data.countryIso,
+      countryCode: data.countryCode,
+      phoneNumber: data.phoneNumber,
+      source: "Client-added",
+      enabled: true,
+    };
+    setProviders((prev) => [newProvider, ...prev]);
+
+    const newRouting: RoutingNumberItem = {
+      id: `routing-${Date.now()}`,
+      phoneNumber: data.phoneNumber,
+      countryIso: data.countryIso,
+      isDefault: false,
+      source: "Client-added",
+      direction: data.direction,
+      priority: data.priority ?? 1,
+      processes: [],
+      targetedCountries: [
+        data.countryIso === "US"
+          ? "United States"
+          : data.countryIso === "IN"
+            ? "India"
+            : data.countryIso,
+      ],
+    };
+    setRoutingNumbers((prev) => [newRouting, ...prev]);
+
+    setIsAddingSipTrunk(false);
+    setSubmissionNotice(`SIP Trunk successfully connected for ${data.name}.`);
   };
 
   return (
@@ -148,93 +195,100 @@ export function TelephonyIntegrationsPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => setIsRequestModalOpen(true)}
-                className="inline-flex items-center gap-2 rounded-full bg-[#1D4ED8] px-4.5 py-2.5 text-[13px] font-medium text-white shadow-xs transition-colors hover:bg-[#1E40AF] focus:ring-2 focus:ring-blue-200 focus:outline-none"
-              >
-                <Phone className="h-3.5 w-3.5" />
-                Request Number
-              </button>
+            {!isAddingSipTrunk && (
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsRequestModalOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#1D4ED8] px-4.5 py-2.5 text-[13px] font-medium text-white shadow-xs transition-colors hover:bg-[#1E40AF] focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                  Request Number
+                </button>
 
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                title="Add SIP Trunk is disabled in this standalone demo"
-                className="inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-[#1E293B]/55 px-5 py-2.5 text-[13px] font-medium text-white/90"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add SIP Trunk
-              </button>
-            </div>
-          </div>
-
-          {/* Provider Cards */}
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:max-w-3xl">
-            {TELEPHONY_PROVIDERS.map((provider) => (
-              <div
-                key={provider.id}
-                data-testid={`provider-card-${provider.id}`}
-                className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs transition-shadow hover:shadow-xs"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[14.5px] font-semibold text-slate-900">
-                        {provider.name}
-                      </span>
-                      <DirectionBadge direction={provider.direction} />
-                    </div>
-                    <p className="mt-0.5 text-[12px] text-slate-400">
-                      {provider.label}
-                    </p>
-                  </div>
-
-                  {/* Toggle Switch (display state matching screenshot) */}
-                  <div
-                    role="switch"
-                    aria-checked={provider.enabled}
-                    aria-label={`${provider.name} status`}
-                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-                      provider.enabled ? "bg-[#2563EB]" : "bg-slate-300"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs transition-transform ${
-                        provider.enabled ? "translate-x-4.5" : "translate-x-1"
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Country */}
-                <div className="mt-3.5 flex items-center gap-2">
-                  <CountryFlag iso={provider.countryIso} size={18} />
-                  <span className="text-[13px] font-semibold text-slate-800">
-                    {provider.countryCode}
-                  </span>
-                </div>
-
-                {/* Phone Number + Source Badge + Delete Icon */}
-                <div className="mt-2.5 flex items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-[13px] font-medium text-slate-600 tabular-nums">
-                      {provider.phoneNumber}
-                    </span>
-                    <SourceBadge source={provider.source} />
-                  </div>
-                  <span
-                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-red-400"
-                    aria-hidden="true"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddingSipTrunk(true)}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#1E293B] px-5 py-2.5 text-[13px] font-medium text-white shadow-xs transition-colors hover:bg-[#0F172A]"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add SIP Trunk
+                </button>
               </div>
-            ))}
+            )}
           </div>
+
+          {/* Provider Content: Add Form or Provider Cards */}
+          {isAddingSipTrunk ? (
+            <AddSipTrunkForm
+              onCancel={() => setIsAddingSipTrunk(false)}
+              onCreate={handleCreateSipTrunk}
+            />
+          ) : (
+            <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:max-w-3xl">
+              {providers.map((provider) => (
+                <div
+                  key={provider.id}
+                  data-testid={`provider-card-${provider.id}`}
+                  className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs transition-shadow hover:shadow-xs"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[14.5px] font-semibold text-slate-900">
+                          {provider.name}
+                        </span>
+                        <DirectionBadge direction={provider.direction} />
+                      </div>
+                      <p className="mt-0.5 text-[12px] text-slate-400">
+                        {provider.label}
+                      </p>
+                    </div>
+
+                    {/* Toggle Switch (display state matching screenshot) */}
+                    <div
+                      role="switch"
+                      aria-checked={provider.enabled}
+                      aria-label={`${provider.name} status`}
+                      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                        provider.enabled ? "bg-[#2563EB]" : "bg-slate-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs transition-transform ${
+                          provider.enabled ? "translate-x-4.5" : "translate-x-1"
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Country */}
+                  <div className="mt-3.5 flex items-center gap-2">
+                    <CountryFlag iso={provider.countryIso} size={18} />
+                    <span className="text-[13px] font-semibold text-slate-800">
+                      {provider.countryCode}
+                    </span>
+                  </div>
+
+                  {/* Phone Number + Source Badge + Delete Icon */}
+                  <div className="mt-2.5 flex items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-[13px] font-medium text-slate-600 tabular-nums">
+                        {provider.phoneNumber}
+                      </span>
+                      <SourceBadge source={provider.source} />
+                    </div>
+                    <span
+                      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-red-400"
+                      aria-hidden="true"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Section 2: Telephony Routing */}
@@ -472,6 +526,19 @@ export function TelephonyIntegrationsPage() {
         onClose={() => setIsRequestModalOpen(false)}
         onSuccess={handleRequestSuccess}
       />
+
+      {/* Floating AI Assistant Bar */}
+      <div className="fixed right-6 bottom-5 z-40 hidden sm:flex items-center gap-3 rounded-full bg-[#0F172A] px-4 py-2 text-white shadow-xl">
+        <span className="text-[12px] font-bold text-slate-400 select-none">⋮⋮</span>
+        <span className="flex items-center gap-1.5 text-[12px] font-medium text-slate-200">
+          <span>🎙</span> AI Scribe
+        </span>
+        <span className="text-slate-600">|</span>
+        <span className="flex items-center gap-1.5 text-[12px] font-medium text-slate-200">
+          <span>💬</span> AI Assistant
+        </span>
+        <span className="text-slate-400 text-[11px]">›</span>
+      </div>
     </AppShell>
   );
 }
