@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { SELECTED_ORGANIZATION } from "@/data/telephony";
+import { PortalSwitcher } from "@/components/common/PortalSwitcher";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -255,13 +256,16 @@ export function AppShell({ children }: AppShellProps) {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
-            aria-label="Notifications"
-          >
-            <Bell className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2.5">
+            <PortalSwitcher current="client" />
+            <button
+              type="button"
+              className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
+              aria-label="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+            </button>
+          </div>
         </header>
 
         {/* Page Content */}

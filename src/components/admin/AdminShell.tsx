@@ -19,6 +19,7 @@ import {
   Volume2,
   X,
 } from "lucide-react";
+import { PortalSwitcher } from "@/components/common/PortalSwitcher";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -207,13 +208,16 @@ export function AdminShell({ children }: AdminShellProps) {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
-            aria-label="Notifications"
-          >
-            <Bell className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2.5">
+            <PortalSwitcher current="admin" />
+            <button
+              type="button"
+              className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
+              aria-label="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+            </button>
+          </div>
         </header>
 
         <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-5 sm:px-6 lg:px-7">

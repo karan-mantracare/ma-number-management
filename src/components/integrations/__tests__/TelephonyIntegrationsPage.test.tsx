@@ -39,6 +39,17 @@ describe("TelephonyIntegrationsPage", () => {
 
     const requestBtn = screen.getByRole("button", { name: /request number/i });
     expect(requestBtn).toBeEnabled();
+
+    // Portal Switcher: Client | Admin
+    const switcher = screen.getByRole("navigation", { name: /portal switcher/i });
+    expect(within(switcher).getByRole("link", { name: "Client" })).toHaveAttribute(
+      "href",
+      "/cs/integration"
+    );
+    expect(within(switcher).getByRole("link", { name: "Admin" })).toHaveAttribute(
+      "href",
+      "/admin/integration"
+    );
   });
 
   it("supports switching between Outbound and Inbound routing tabs and filtering by phone number", () => {

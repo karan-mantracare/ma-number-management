@@ -27,6 +27,13 @@ describe("AdminTelephonyPage", () => {
 
     expect(screen.getByTestId("system-configs-view")).toBeInTheDocument();
     expect(screen.getByText("+14842918903")).toBeInTheDocument();
+
+    // Portal Switcher: Client and Admin links
+    const clientLink = screen.getByRole("link", { name: "Client" });
+    const adminLink = screen.getByRole("link", { name: "Admin" });
+    expect(clientLink).toHaveAttribute("href", "/cs/integration");
+    expect(adminLink).toHaveAttribute("href", "/admin/integration");
+    expect(adminLink).toHaveAttribute("aria-current", "page");
   });
 
   it("opens read-only Client Number view showing only Client-added numbers, supports search by client or phone, and returns to configs", () => {
