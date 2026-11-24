@@ -98,6 +98,9 @@ describe("AdminOrganizationsPage", () => {
     expect(within(drawer).getByText("Spikes Detected")).toBeInTheDocument();
     expect(within(drawer).getByText("Limit Hits")).toBeInTheDocument();
 
+    // Bottom dates along the X-axis
+    expect(within(drawer).getAllByText(/Nov|24|23|22|21|20|19|18/i).length).toBeGreaterThan(0);
+
     // Option to change concurrency limit
     const limitInput = within(drawer).getByLabelText("Concurrency limit value");
     fireEvent.change(limitInput, { target: { value: "45" } });

@@ -124,11 +124,12 @@ export function OrganizationConcurrencyDrawer({
 
   // SVG Chart Dimensions
   const chartWidth = 560;
-  const chartHeight = 200;
-  const paddingX = 40;
-  const paddingY = 25;
+  const chartHeight = 225;
+  const paddingX = 42;
+  const paddingTop = 25;
+  const paddingBottom = 30;
   const usableWidth = chartWidth - paddingX * 2;
-  const usableHeight = chartHeight - paddingY * 2;
+  const usableHeight = chartHeight - paddingTop - paddingBottom;
 
   // Calculate coordinates
   const points = filteredData.map((d, index) => {
@@ -138,7 +139,7 @@ export function OrganizationConcurrencyDrawer({
         : paddingX + usableWidth / 2;
     const y =
       chartHeight -
-      paddingY -
+      paddingBottom -
       (Math.min(d.concurrency, maxScale) / maxScale) * usableHeight;
     const hitsLimit = d.concurrency >= organization.concurrencyLimit;
     return { ...d, x, y, hitsLimit };
@@ -155,14 +156,57 @@ export function OrganizationConcurrencyDrawer({
 
   const areaPath =
     points.length > 1
-      ? `${linePath} L ${points[points.length - 1].x.toFixed(1)},${chartHeight - paddingY} L ${points[0].x.toFixed(1)},${chartHeight - paddingY} Z`
+      ? `${linePath} L ${points[points.length - 1].x.toFixed(1)},${chartHeight - paddingBottom} L ${points[0].x.toFixed(1)},${chartHeight - paddingBottom} Z`
       : "";
 
   // Concurrency Limit horizontal reference line
   const limitY =
     chartHeight -
-    paddingY -
+    paddingBottom -
     (Math.min(organization.concurrencyLimit, maxScale) / maxScale) * usableHeight;
+
+  // X-Axis Date Ticks along the bottom
+  const dateTicks = useMemo(() => {
+    if (filteredData.length === 0) return [];
+    if (filteredData.length <= 6) {
+      return filteredData.map((d, i) => {
+        const x =
+          filteredData.length > 1
+            ? paddingX + (i / (filteredData.length - 1)) * usableWidth
+            : paddingX + usableWidth / 2;
+        const parts = d.label.split(" ");
+        return {
+          x,
+          label:
+            datePreset === "24h"
+              ? parts[1] || d.label
+              : `${parts[0]} ${parts[1] || ""}`.trim(),
+        };
+      });
+    }
+
+    const tickCount = Math.min(5, filteredData.length);
+    const indices: number[] = [];
+    for (let step = 0; step < tickCount; step++) {
+      indices.push(
+        Math.round((step / (tickCount - 1)) * (filteredData.length - 1))
+      );
+    }
+
+    return indices.map((idx) => {
+      const d = filteredData[idx];
+      const x = paddingX + (idx / (filteredData.length - 1)) * usableWidth;
+      const parts = d.label.split(" ");
+      const formatted =
+        datePreset === "24h"
+          ? parts[1] || d.label
+          : `${parts[0]} ${parts[1] || ""}`.trim();
+      return {
+        x,
+        label: formatted,
+      };
+    });
+  }, [filteredData, datePreset, paddingX, usableWidth]);
 
   return (
     <div
@@ -514,7 +558,7 @@ export function OrganizationConcurrencyDrawer({
 
                 {/* Y-Axis Horizontal Grid Lines */}
                 {[0, 0.25, 0.5, 0.75, 1].map((pct) => {
-                  const y = chartHeight - paddingY - pct * usableHeight;
+                  const y = chartHeight - paddingBottom - pct * usableHeight;
                   const labelVal = Math.round(pct * maxScale);
                   return (
                     <g key={pct}>
@@ -529,8 +573,8 @@ export function OrganizationConcurrencyDrawer({
                       />
                       <text
                         x={paddingX - 8}
-                        y={y + 3}
-                        fontSize="9"
+                        y={y + 3.5}
+                        fontSize="9.5"
                         fill="#94A3B8"
                         textAnchor="end"
                         fontWeight="500"
@@ -540,6 +584,30 @@ export function OrganizationConcurrencyDrawer({
                     </g>
                   );
                 })}
+
+                {/* X-Axis Bottom Date Labels */}
+                {dateTicks.map((tick, i) => (
+                  <g key={i}>
+                    <line
+                      x1={tick.x}
+                      y1={chartHeight - paddingBottom}
+                      x2={tick.x}
+                      y2={chartHeight - paddingBottom + 4}
+                      stroke="#CBD5E1"
+                      strokeWidth="1"
+                    />
+                    <text
+                      x={tick.x}
+                      y={chartHeight - paddingBottom + 16}
+                      fontSize="9.5"
+                      fill="#64748B"
+                      textAnchor="middle"
+                      fontWeight="500"
+                    >
+                      {tick.label}
+                    </text>
+                  </g>
+                ))}
 
                 {/* Shaded Area Under Curve */}
                 {areaPath && (
