@@ -283,7 +283,7 @@ export function OrganizationConcurrencyDrawer({
       />
 
       {/* Right Drawer Container */}
-      <aside className="relative z-50 flex h-full w-full max-w-md sm:max-w-lg md:max-w-xl flex-col bg-white shadow-2xl animate-in slide-in-from-right duration-300">
+      <aside className="relative z-50 flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl animate-in slide-in-from-right duration-300">
         {/* Drawer Header: Company Name & Close */}
         <div className="flex items-center justify-between border-b border-slate-200/90 px-6 py-4">
           <div className="flex items-center gap-3">
