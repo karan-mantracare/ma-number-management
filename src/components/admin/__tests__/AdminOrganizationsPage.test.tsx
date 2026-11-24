@@ -91,8 +91,10 @@ describe("AdminOrganizationsPage", () => {
       })
     ).toBeInTheDocument();
     expect(within(drawer).getByRole("button", { name: "24h" })).toBeInTheDocument();
-    expect(within(drawer).getByRole("button", { name: "7 Days" })).toBeInTheDocument();
-    expect(within(drawer).getByRole("button", { name: "30 Days" })).toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "7D" })).toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "14D" })).toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "30D" })).toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "Custom" })).toBeInTheDocument();
 
     // Spikes and Limit breaches summary
     expect(within(drawer).getByText("Spikes Detected")).toBeInTheDocument();
