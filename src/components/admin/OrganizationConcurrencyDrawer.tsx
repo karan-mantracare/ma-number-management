@@ -169,7 +169,7 @@ export function OrganizationConcurrencyDrawer({
       role="dialog"
       aria-modal="true"
       aria-label={`Concurrency management for ${organization.name}`}
-      className="fixed inset-0 z-50 flex overflow-hidden"
+      className="fixed inset-0 z-50 flex justify-end overflow-hidden"
     >
       {/* Dimmed Backdrop */}
       <div
@@ -177,8 +177,8 @@ export function OrganizationConcurrencyDrawer({
         onClick={onClose}
       />
 
-      {/* Left Drawer Container */}
-      <aside className="relative z-50 flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-300">
+      {/* Right Drawer Container */}
+      <aside className="relative z-50 flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl animate-in slide-in-from-right duration-300">
         {/* Drawer Header: Company Name & Close */}
         <div className="flex items-center justify-between border-b border-slate-200/90 px-6 py-4">
           <div className="flex items-center gap-3">

@@ -63,7 +63,7 @@ describe("AdminOrganizationsPage", () => {
     expect(toggle).toHaveAttribute("aria-checked", "true");
   });
 
-  it("opens left drawer when edit icon is clicked, displays company name, concurrency graph, highlights spikes/limit hits, and allows changing limit", () => {
+  it("opens right drawer when edit icon is clicked, displays company name, concurrency graph, highlights spikes/limit hits, and allows changing limit", () => {
     render(<AdminOrganizationsPage />);
 
     const editButton = screen.getByRole("button", {
