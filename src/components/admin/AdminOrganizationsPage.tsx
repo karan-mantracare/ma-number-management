@@ -16,9 +16,9 @@ import {
 import {
   AdminOrganization,
   INITIAL_ADMIN_ORGANIZATIONS,
-  VoiceAiProvider,
 } from "@/data/adminOrganizations";
 import { AdminShell } from "./AdminShell";
+import { OrganizationConcurrencyDrawer } from "./OrganizationConcurrencyDrawer";
 
 export function AdminOrganizationsPage() {
   const [organizations, setOrganizations] = useState<AdminOrganization[]>(
@@ -64,14 +64,21 @@ export function AdminOrganizationsPage() {
     }, 1000);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingOrg) return;
+  const handleUpdateLimit = (orgId: string, newLimit: number) => {
     setOrganizations((prev) =>
-      prev.map((org) => (org.id === editingOrg.id ? editingOrg : org))
+      prev.map((org) => {
+        if (org.id === orgId) {
+          return { ...org, concurrencyLimit: newLimit };
+        }
+        return org;
+      })
     );
-    showToast(`Updated organization: ${editingOrg.name}`);
-    setEditingOrg(null);
+    setEditingOrg((prev) =>
+      prev && prev.id === orgId
+        ? { ...prev, concurrencyLimit: newLimit }
+        : prev
+    );
+    showToast(`Concurrency limit updated to ${newLimit} concurrent calls`);
   };
 
   return (
@@ -321,126 +328,14 @@ export function AdminOrganizationsPage() {
           </div>
         </div>
 
-        {/* Edit Organization Modal */}
+        {/* Concurrency Management Left Drawer */}
         {editingOrg && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div
-              className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px]"
-              onClick={() => setEditingOrg(null)}
-            />
-            <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95">
-              <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                    <Pencil className="h-4 w-4" />
-                  </div>
-                  <h3 className="text-[16px] font-bold text-slate-900">
-                    Edit Organization
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setEditingOrg(null)}
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSaveEdit} className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="edit-org-name"
-                    className="mb-1 block text-[12px] font-medium text-slate-700"
-                  >
-                    Organization Name
-                  </label>
-                  <input
-                    id="edit-org-name"
-                    type="text"
-                    required
-                    value={editingOrg.name}
-                    onChange={(e) =>
-                      setEditingOrg({ ...editingOrg, name: e.target.value })
-                    }
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[13px] text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="edit-org-provider"
-                    className="mb-1 block text-[12px] font-medium text-slate-700"
-                  >
-                    Voice AI Provider
-                  </label>
-                  <select
-                    id="edit-org-provider"
-                    value={editingOrg.provider}
-                    onChange={(e) =>
-                      setEditingOrg({
-                        ...editingOrg,
-                        provider: e.target.value as VoiceAiProvider,
-                      })
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[13px] text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                  >
-                    <option value="LIVEKIT">LIVEKIT</option>
-                    <option value="DOGRAH">DOGRAH</option>
-                    <option value="VAPI">VAPI</option>
-                    <option value="RETELL">RETELL</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                  <div>
-                    <span className="text-[13px] font-medium text-slate-800">
-                      Organization Status
-                    </span>
-                    <p className="text-[11px] text-slate-500">
-                      Active organizations can initiate outbound AI calls.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={editingOrg.isActive}
-                    onClick={() =>
-                      setEditingOrg({
-                        ...editingOrg,
-                        isActive: !editingOrg.isActive,
-                      })
-                    }
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      editingOrg.isActive ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        editingOrg.isActive ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="mt-5 flex items-center justify-end gap-2.5 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingOrg(null)}
-                    className="rounded-full border border-slate-200 px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="rounded-full bg-[#1E293B] px-5 py-2 text-[13px] font-medium text-white hover:bg-slate-800 transition-colors shadow-xs"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+          <OrganizationConcurrencyDrawer
+            organization={editingOrg}
+            isOpen={!!editingOrg}
+            onClose={() => setEditingOrg(null)}
+            onUpdateLimit={handleUpdateLimit}
+          />
         )}
       </div>
     </AdminShell>

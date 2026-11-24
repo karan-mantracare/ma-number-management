@@ -63,7 +63,7 @@ describe("AdminOrganizationsPage", () => {
     expect(toggle).toHaveAttribute("aria-checked", "true");
   });
 
-  it("opens edit modal when edit icon is clicked and saves changes", () => {
+  it("opens left drawer when edit icon is clicked, displays company name, concurrency graph, highlights spikes/limit hits, and allows changing limit", () => {
     render(<AdminOrganizationsPage />);
 
     const editButton = screen.getByRole("button", {
@@ -71,12 +71,48 @@ describe("AdminOrganizationsPage", () => {
     });
     fireEvent.click(editButton);
 
-    expect(screen.getByRole("heading", { name: "Edit Organization" })).toBeInTheDocument();
-    const nameInput = screen.getByLabelText("Organization Name");
-    fireEvent.change(nameInput, { target: { value: "Product Demo Updated" } });
+    // Left Drawer opens with company name displayed
+    const drawer = screen.getByRole("dialog", {
+      name: "Concurrency management for Product Demo",
+    });
+    expect(drawer).toBeInTheDocument();
+    expect(
+      within(drawer).getByRole("heading", { name: "Product Demo" })
+    ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
-    expect(screen.getByText("Product Demo Updated")).toBeInTheDocument();
+    // Concurrency limit displayed
+    expect(within(drawer).getByText("Current Concurrency Limit")).toBeInTheDocument();
+    expect(within(drawer).getByText("30")).toBeInTheDocument();
+
+    // Concurrency Graph and date range selectors
+    expect(
+      within(drawer).getByRole("heading", {
+        name: "Concurrency Hits & Limit Monitoring",
+      })
+    ).toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "24h" })).toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "7 Days" })).toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "30 Days" })).toBeInTheDocument();
+
+    // Spikes and Limit breaches summary
+    expect(within(drawer).getByText("Spikes Detected")).toBeInTheDocument();
+    expect(within(drawer).getByText("Limit Hits")).toBeInTheDocument();
+
+    // Option to change concurrency limit
+    const limitInput = within(drawer).getByLabelText("Concurrency limit value");
+    fireEvent.change(limitInput, { target: { value: "45" } });
+    const saveButton = within(drawer).getByRole("button", { name: /save limit/i });
+    fireEvent.click(saveButton);
+
+    expect(screen.getByText(/concurrency limit updated to 45/i)).toBeInTheDocument();
+
+    // Close drawer
+    fireEvent.click(within(drawer).getAllByRole("button", { name: /close drawer/i })[0]);
+    expect(
+      screen.queryByRole("dialog", {
+        name: "Concurrency management for Product Demo",
+      })
+    ).not.toBeInTheDocument();
   });
 
   it("opens row action menu and shows Update Voice AI Provider and Disable Organization", () => {
