@@ -168,44 +168,64 @@ export function OrganizationConcurrencyDrawer({
   // X-Axis Date Ticks along the bottom
   const dateTicks = useMemo(() => {
     if (filteredData.length === 0) return [];
-    if (filteredData.length <= 6) {
+
+    // For 24h: show all time checkpoints (e.g. "06:00", "11:00", "15:00", "20:00")
+    if (datePreset === "24h") {
       return filteredData.map((d, i) => {
         const x =
           filteredData.length > 1
             ? paddingX + (i / (filteredData.length - 1)) * usableWidth
             : paddingX + usableWidth / 2;
         const parts = d.label.split(" ");
+        const timePart = parts[2] || parts[1] || d.label;
         return {
           x,
-          label:
-            datePreset === "24h"
-              ? parts[1] || d.label
-              : `${parts[0]} ${parts[1] || ""}`.trim(),
+          label: timePart,
         };
       });
     }
 
-    const tickCount = Math.min(5, filteredData.length);
-    const indices: number[] = [];
-    for (let step = 0; step < tickCount; step++) {
-      indices.push(
-        Math.round((step / (tickCount - 1)) * (filteredData.length - 1))
-      );
+    // Extract unique calendar dates
+    const uniqueDates: { date: string; monthDay: string }[] = [];
+    filteredData.forEach((d) => {
+      if (!uniqueDates.some((u) => u.date === d.date)) {
+        const parts = d.label.split(" ");
+        uniqueDates.push({
+          date: d.date,
+          monthDay: `${parts[0]} ${parts[1] || ""}`.trim(),
+        });
+      }
+    });
+
+    // If 7 days or fewer (e.g. "7d" preset), show ALL 7 individual days!
+    if (uniqueDates.length <= 7) {
+      return uniqueDates.map((u, i) => {
+        const x =
+          uniqueDates.length > 1
+            ? paddingX + (i / (uniqueDates.length - 1)) * usableWidth
+            : paddingX + usableWidth / 2;
+        return {
+          x,
+          label: u.monthDay,
+        };
+      });
     }
 
-    return indices.map((idx) => {
-      const d = filteredData[idx];
-      const x = paddingX + (idx / (filteredData.length - 1)) * usableWidth;
-      const parts = d.label.split(" ");
-      const formatted =
-        datePreset === "24h"
-          ? parts[1] || d.label
-          : `${parts[0]} ${parts[1] || ""}`.trim();
-      return {
+    // For longer ranges (14d, 30d, custom > 7 days): show 7 evenly spaced date ticks
+    const tickCount = 7;
+    const ticks: { x: number; label: string }[] = [];
+    for (let step = 0; step < tickCount; step++) {
+      const idx = Math.round(
+        (step / (tickCount - 1)) * (uniqueDates.length - 1)
+      );
+      const u = uniqueDates[idx];
+      const x = paddingX + (step / (tickCount - 1)) * usableWidth;
+      ticks.push({
         x,
-        label: formatted,
-      };
-    });
+        label: u.monthDay,
+      });
+    }
+    return ticks;
   }, [filteredData, datePreset, paddingX, usableWidth]);
 
   return (
