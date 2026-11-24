@@ -42,11 +42,14 @@ export function OrganizationConcurrencyDrawer({
   const [activePoint, setActivePoint] = useState<ConcurrencyDataPoint | null>(
     null
   );
+  const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
+  const svgRef = React.useRef<SVGSVGElement>(null);
 
   // Sync state if organization changes
   React.useEffect(() => {
     setLimitInput(organization.concurrencyLimit);
     setSaveSuccess(false);
+    setHoveredPointId(null);
   }, [organization.concurrencyLimit, organization.id]);
 
   // Filter concurrency history based on date preset or range
@@ -227,6 +230,44 @@ export function OrganizationConcurrencyDrawer({
     }
     return ticks;
   }, [filteredData, datePreset, paddingX, usableWidth]);
+
+  // Determine active/hovered point for cursor movement
+  const displayPoint = useMemo(() => {
+    if (hoveredPointId) {
+      return points.find((p) => p.id === hoveredPointId) || null;
+    }
+    if (activePoint) {
+      return points.find((p) => p.id === activePoint.id) || null;
+    }
+    return null;
+  }, [hoveredPointId, activePoint, points]);
+
+  const handleSvgPointerMove = (
+    e: React.MouseEvent<SVGElement> | React.PointerEvent<SVGElement>
+  ) => {
+    if (!svgRef.current || points.length === 0) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const width = rect && rect.width > 0 ? rect.width : chartWidth;
+    const left = rect && typeof rect.left === "number" ? rect.left : 0;
+    const clientX = typeof e.clientX === "number" ? e.clientX : 0;
+
+    const svgX = ((clientX - left) / width) * chartWidth;
+
+    let closest = points[0];
+    let minDiff = Math.abs(points[0].x - svgX);
+    for (let i = 1; i < points.length; i++) {
+      const diff = Math.abs(points[i].x - svgX);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = points[i];
+      }
+    }
+    setHoveredPointId(closest.id);
+  };
+
+  const handleSvgPointerLeave = () => {
+    setHoveredPointId(null);
+  };
 
   return (
     <div
@@ -543,8 +584,14 @@ export function OrganizationConcurrencyDrawer({
             {/* Visual SVG Chart */}
             <div className="relative overflow-hidden rounded-xl border border-slate-100 bg-slate-50/40 p-2">
               <svg
+                ref={svgRef}
+                data-testid="concurrency-chart-svg"
                 viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                className="w-full overflow-visible"
+                className="w-full overflow-visible select-none cursor-crosshair touch-none"
+                onPointerMove={handleSvgPointerMove}
+                onMouseMove={handleSvgPointerMove}
+                onPointerLeave={handleSvgPointerLeave}
+                onMouseLeave={handleSvgPointerLeave}
               >
                 <defs>
                   {/* Concurrency Area Gradient */}
@@ -738,38 +785,131 @@ export function OrganizationConcurrencyDrawer({
                     />
                   );
                 })}
+
+                {/* Cursor Tracking Guide Line & Highlight on Pointer Movement */}
+                {displayPoint && (
+                  <g pointerEvents="none">
+                    {/* Vertical Tracker Line */}
+                    <line
+                      x1={displayPoint.x}
+                      y1={paddingTop}
+                      x2={displayPoint.x}
+                      y2={chartHeight - paddingBottom}
+                      stroke="#2563EB"
+                      strokeWidth="1.5"
+                      strokeDasharray="3,3"
+                      opacity="0.8"
+                    />
+
+                    {/* Tracking Ring on Point */}
+                    <circle
+                      cx={displayPoint.x}
+                      cy={displayPoint.y}
+                      r="9"
+                      fill={
+                        displayPoint.hitsLimit
+                          ? "#EF4444"
+                          : displayPoint.isSpike
+                          ? "#F59E0B"
+                          : "#2563EB"
+                      }
+                      fillOpacity="0.22"
+                    />
+                    <circle
+                      cx={displayPoint.x}
+                      cy={displayPoint.y}
+                      r="4.5"
+                      fill={
+                        displayPoint.hitsLimit
+                          ? "#EF4444"
+                          : displayPoint.isSpike
+                          ? "#D97706"
+                          : "#2563EB"
+                      }
+                      stroke="#FFFFFF"
+                      strokeWidth="2"
+                    />
+
+                    {/* On-Graph Floating Badge showing Date & Concurrency */}
+                    <g
+                      transform={`translate(${Math.max(
+                        paddingX + 60,
+                        Math.min(chartWidth - paddingX - 60, displayPoint.x)
+                      )}, ${Math.max(paddingTop + 14, displayPoint.y - 18)})`}
+                    >
+                      <rect
+                        x="-65"
+                        y="-19"
+                        width="130"
+                        height="22"
+                        rx="6"
+                        fill="#0F172A"
+                        className="opacity-95 shadow-md"
+                      />
+                      <text
+                        x="0"
+                        y="-4.5"
+                        fontSize="9.5"
+                        fill="#FFFFFF"
+                        fontWeight="bold"
+                        textAnchor="middle"
+                      >
+                        {displayPoint.label}: {displayPoint.concurrency} calls
+                      </text>
+                    </g>
+                  </g>
+                )}
+
+                {/* Full-area invisible pointer capture rectangle */}
+                <rect
+                  x={0}
+                  y={0}
+                  width={chartWidth}
+                  height={chartHeight}
+                  fill="transparent"
+                  className="cursor-crosshair"
+                  onPointerMove={handleSvgPointerMove}
+                  onMouseMove={handleSvgPointerMove}
+                />
               </svg>
 
-              {/* Interactive Tooltip Card */}
-              {activePoint && (
-                <div className="mt-2 flex items-center justify-between rounded-xl border border-slate-200 bg-white p-2.5 text-[12px] shadow-sm animate-in fade-in">
+              {/* Interactive Date & Concurrency Banner */}
+              {displayPoint && (
+                <div
+                  data-testid="concurrency-hover-card"
+                  className="mt-2 flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/70 p-2.5 text-[12px] shadow-xs animate-in fade-in"
+                >
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-slate-400" />
-                    <span className="font-medium text-slate-700">
-                      {activePoint.label}
+                    <Clock className="h-4 w-4 text-blue-600" />
+                    <span className="font-semibold text-slate-800">
+                      {displayPoint.label}
                     </span>
                     <span className="text-slate-400">•</span>
                     <span className="font-bold text-slate-900">
-                      {activePoint.concurrency} concurrent calls
+                      {displayPoint.concurrency} concurrent calls
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
-                    {activePoint.concurrency >= organization.concurrencyLimit && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10.5px] font-bold text-red-700">
+                    {displayPoint.concurrency >= organization.concurrencyLimit && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-[10.5px] font-bold text-red-700">
                         <AlertTriangle className="h-3 w-3" /> Hit Limit ({organization.concurrencyLimit})
                       </span>
                     )}
-                    {activePoint.isSpike &&
-                      activePoint.concurrency < organization.concurrencyLimit && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-bold text-amber-700">
+                    {displayPoint.isSpike &&
+                      displayPoint.concurrency < organization.concurrencyLimit && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10.5px] font-bold text-amber-700">
                           <Zap className="h-3 w-3" /> Surge Spike
                         </span>
                       )}
                     <button
                       type="button"
-                      onClick={() => setActivePoint(null)}
+                      onClick={() => {
+                        setActivePoint(null);
+                        setHoveredPointId(null);
+                      }}
                       className="rounded-full p-1 text-slate-400 hover:text-slate-600"
+                      aria-label="Dismiss point detail"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>

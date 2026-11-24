@@ -120,6 +120,43 @@ describe("AdminOrganizationsPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("shows date and concurrency number when user moves cursor on the graph", () => {
+    render(<AdminOrganizationsPage />);
+
+    // Open drawer
+    fireEvent.click(screen.getByRole("button", { name: "Edit Product Demo" }));
+    const drawer = screen.getByRole("dialog", {
+      name: "Concurrency management for Product Demo",
+    });
+
+    const svg = within(drawer).getByTestId("concurrency-chart-svg");
+    expect(svg).toBeInTheDocument();
+
+    // Mock getBoundingClientRect for SVG pointer calculation
+    svg.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: 560,
+      height: 225,
+      right: 560,
+      bottom: 225,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+
+    // Move cursor over SVG graph
+    fireEvent.mouseMove(svg, { clientX: 280, clientY: 100 });
+
+    // Expect date and concurrency number to be shown
+    const hoverCard = within(drawer).getByTestId("concurrency-hover-card");
+    expect(hoverCard).toBeInTheDocument();
+    expect(within(hoverCard).getByText(/concurrent calls/i)).toBeInTheDocument();
+
+    // Leaving cursor resets hover
+    fireEvent.mouseLeave(svg);
+  });
+
   it("opens row action menu and shows Update Voice AI Provider and Disable Organization", () => {
     render(<AdminOrganizationsPage />);
 
