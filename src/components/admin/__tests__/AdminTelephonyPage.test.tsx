@@ -20,7 +20,7 @@ describe("AdminTelephonyPage", () => {
     expect(
       screen.getByRole("button", { name: /client number/i })
     ).toBeEnabled();
-    expect(screen.getByRole("button", { name: /report/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^report$/i })).toBeEnabled();
     expect(
       screen.getByRole("button", { name: /add configuration/i })
     ).toBeDisabled();
@@ -34,6 +34,14 @@ describe("AdminTelephonyPage", () => {
     expect(clientLink).toHaveAttribute("href", "/cs/integration");
     expect(adminLink).toHaveAttribute("href", "/admin/integration");
     expect(adminLink).toHaveAttribute("aria-current", "page");
+
+    // Sidebar navigation sections
+    expect(screen.getByText("Prebuilt Templates")).toBeInTheDocument();
+    expect(screen.getByText("Manage")).toBeInTheDocument();
+    expect(screen.getByText("Observability")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Industry & Services" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Integrations" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
   });
 
   it("opens read-only Client Number view showing only Client-added numbers, supports search by client or phone, and returns to configs", () => {
@@ -83,7 +91,7 @@ describe("AdminTelephonyPage", () => {
   it("renders Report view with Call Volume rankings, shared system number attribution, Completed Calls across all numbers, date filtering, and zero-call states", () => {
     render(<AdminTelephonyPage />);
 
-    fireEvent.click(screen.getByRole("button", { name: /report/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^report$/i }));
     const reportView = screen.getByTestId("report-view");
     expect(reportView).toBeInTheDocument();
 
