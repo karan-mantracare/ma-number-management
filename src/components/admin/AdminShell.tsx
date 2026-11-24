@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   BarChart3,
   Bell,
@@ -33,12 +34,18 @@ import { PortalSwitcher } from "@/components/common/PortalSwitcher";
 
 interface AdminShellProps {
   children: React.ReactNode;
+  activeItem?: string;
+  title?: string;
 }
 
-export function AdminShell({ children }: AdminShellProps) {
+export function AdminShell({
+  children,
+  activeItem = "Integrations",
+  title = "Integrations",
+}: AdminShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeItem, setActiveItem] = useState("Integrations");
+  const [currentActive, setCurrentActive] = useState(activeItem);
 
   const [sectionsOpen, setSectionsOpen] = useState({
     prebuilt: true,
@@ -119,86 +126,86 @@ export function AdminShell({ children }: AdminShellProps) {
               <AdminNavItem
                 icon={<Building2 className="h-4 w-4" />}
                 label="Industry & Services"
-                active={activeItem === "Industry & Services"}
+                active={currentActive === "Industry & Services"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Industry & Services")}
+                onClick={() => setCurrentActive("Industry & Services")}
               />
               <AdminNavItem
                 icon={<Package className="h-4 w-4" />}
                 label="Products & Services"
-                active={activeItem === "Products & Services"}
+                active={currentActive === "Products & Services"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Products & Services")}
+                onClick={() => setCurrentActive("Products & Services")}
               />
               <AdminNavItem
                 icon={<CreditCard className="h-4 w-4" />}
                 label="Plans & Credits"
-                active={activeItem === "Plans & Credits"}
+                active={currentActive === "Plans & Credits"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Plans & Credits")}
+                onClick={() => setCurrentActive("Plans & Credits")}
               />
               <AdminNavItem
                 icon={<ShieldCheck className="h-4 w-4" />}
                 label="Roles & Permissions"
-                active={activeItem === "Roles & Permissions"}
+                active={currentActive === "Roles & Permissions"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Roles & Permissions")}
+                onClick={() => setCurrentActive("Roles & Permissions")}
               />
               <AdminNavItem
                 icon={<SlidersHorizontal className="h-4 w-4" />}
                 label="Custom Fields"
-                active={activeItem === "Custom Fields"}
+                active={currentActive === "Custom Fields"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Custom Fields")}
+                onClick={() => setCurrentActive("Custom Fields")}
               />
               <AdminNavItem
                 icon={<BarChart3 className="h-4 w-4" />}
                 label="Report Templates"
-                active={activeItem === "Report Templates"}
+                active={currentActive === "Report Templates"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Report Templates")}
+                onClick={() => setCurrentActive("Report Templates")}
               />
               <AdminNavItem
                 icon={<FileText className="h-4 w-4" />}
                 label="Document Templates"
-                active={activeItem === "Document Templates"}
+                active={currentActive === "Document Templates"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Document Templates")}
+                onClick={() => setCurrentActive("Document Templates")}
               />
               <AdminNavItem
                 icon={<Sliders className="h-4 w-4" />}
                 label="Forms"
-                active={activeItem === "Forms"}
+                active={currentActive === "Forms"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Forms")}
+                onClick={() => setCurrentActive("Forms")}
               />
               <AdminNavItem
                 icon={<GitFork className="h-4 w-4" />}
                 label="Workflows"
-                active={activeItem === "Workflows"}
+                active={currentActive === "Workflows"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Workflows")}
+                onClick={() => setCurrentActive("Workflows")}
               />
               <AdminNavItem
                 icon={<Wrench className="h-4 w-4" />}
                 label="Automations"
-                active={activeItem === "Automations"}
+                active={currentActive === "Automations"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Automations")}
+                onClick={() => setCurrentActive("Automations")}
               />
               <AdminNavItem
                 icon={<BookOpen className="h-4 w-4" />}
                 label="Knowledge Base"
-                active={activeItem === "Knowledge Base"}
+                active={currentActive === "Knowledge Base"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Knowledge Base")}
+                onClick={() => setCurrentActive("Knowledge Base")}
               />
               <AdminNavItem
                 icon={<CheckSquare className="h-4 w-4" />}
                 label="Tasks"
-                active={activeItem === "Tasks"}
+                active={currentActive === "Tasks"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Tasks")}
+                onClick={() => setCurrentActive("Tasks")}
               />
             </div>
           )}
@@ -217,37 +224,39 @@ export function AdminShell({ children }: AdminShellProps) {
               <AdminNavItem
                 icon={<UserCheck className="h-4 w-4" />}
                 label="Admin Users"
-                active={activeItem === "Admin Users"}
+                active={currentActive === "Admin Users"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Admin Users")}
+                onClick={() => setCurrentActive("Admin Users")}
               />
               <AdminNavItem
                 icon={<Building2 className="h-4 w-4" />}
                 label="Organization"
-                active={activeItem === "Organization"}
+                active={currentActive === "Organization"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Organization")}
+                href="/admin/organization"
+                onClick={() => setCurrentActive("Organization")}
               />
               <AdminNavItem
                 icon={<Link2 className="h-4 w-4" />}
                 label="Integrations"
-                active={activeItem === "Integrations"}
+                active={currentActive === "Integrations"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Integrations")}
+                href="/admin/integration"
+                onClick={() => setCurrentActive("Integrations")}
               />
               <AdminNavItem
                 icon={<Mic className="h-4 w-4" />}
                 label="AI Voices"
-                active={activeItem === "AI Voices"}
+                active={currentActive === "AI Voices"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("AI Voices")}
+                onClick={() => setCurrentActive("AI Voices")}
               />
               <AdminNavItem
                 icon={<SlidersVertical className="h-4 w-4" />}
                 label="Feature Switches"
-                active={activeItem === "Feature Switches"}
+                active={currentActive === "Feature Switches"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Feature Switches")}
+                onClick={() => setCurrentActive("Feature Switches")}
               />
             </div>
           )}
@@ -266,16 +275,16 @@ export function AdminShell({ children }: AdminShellProps) {
               <AdminNavItem
                 icon={<List className="h-4 w-4" />}
                 label="logs"
-                active={activeItem === "logs"}
+                active={currentActive === "logs"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("logs")}
+                onClick={() => setCurrentActive("logs")}
               />
               <AdminNavItem
                 icon={<PhoneCall className="h-4 w-4" />}
                 label="Calls Monitoring"
-                active={activeItem === "Calls Monitoring"}
+                active={currentActive === "Calls Monitoring"}
                 collapsed={sidebarCollapsed && !isMobile}
-                onClick={() => setActiveItem("Calls Monitoring")}
+                onClick={() => setCurrentActive("Calls Monitoring")}
               />
             </div>
           )}
@@ -335,10 +344,14 @@ export function AdminShell({ children }: AdminShellProps) {
             </button>
             <div className="flex items-center gap-2">
               <h1 className="text-[16px] font-semibold text-slate-900">
-                Integrations
+                {title}
               </h1>
               <span
-                title="Admin Telephony Configurations, Client Numbers, and Outbound Reports"
+                title={
+                  title === "Organizations"
+                    ? "Manage organizations and their Voice AI providers"
+                    : "Admin Telephony Configurations, Client Numbers, and Outbound Reports"
+                }
                 className="inline-flex text-slate-400"
               >
                 <Info className="h-3.5 w-3.5" />
@@ -402,25 +415,18 @@ function AdminNavItem({
   label,
   active = false,
   collapsed = false,
+  href,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   active?: boolean;
   collapsed?: boolean;
+  href?: string;
   onClick?: () => void;
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group flex w-full items-center gap-3 rounded-full px-3.5 py-2 text-[13px] transition-colors text-left ${
-        active
-          ? "bg-[#2c3545] font-medium text-white shadow-2xs"
-          : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
-      } ${collapsed ? "justify-center px-2" : ""}`}
-      title={collapsed ? label : undefined}
-    >
+  const content = (
+    <>
       <span
         className={`shrink-0 transition-colors ${
           active
@@ -431,6 +437,37 @@ function AdminNavItem({
         {icon}
       </span>
       {!collapsed && <span className="truncate">{label}</span>}
+    </>
+  );
+
+  const className = `group flex w-full items-center gap-3 rounded-full px-3.5 py-2 text-[13px] transition-colors text-left ${
+    active
+      ? "bg-[#2c3545] font-medium text-white shadow-2xs"
+      : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
+  } ${collapsed ? "justify-center px-2" : ""}`;
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        role="button"
+        onClick={onClick}
+        className={className}
+        title={collapsed ? label : undefined}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={className}
+      title={collapsed ? label : undefined}
+    >
+      {content}
     </button>
   );
 }
